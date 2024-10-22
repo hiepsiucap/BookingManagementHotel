@@ -1,0 +1,95 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model RentalPrice {
+  id           Int       @id @default(autoincrement()) // Add an ID for RentalPrice
+  price        Float
+  room_type_id Int
+  room_type    RoomTypes @relation(fields: [room_type_id], references: [id])
+  type_rental  String
+  Booking      Booking[]
+}
+model User{
+  id String @id @default(cuid())
+  name String
+  username String @unique
+  image String
+  password String
+  role String
+}
+enum BookingStatus {
+  pending      // Active booking
+  cancelled   // Booking cancelled
+  check_in
+  Confirmed
+  check_out
+}
+enum PaymentMethod {
+  cash           
+  credit_card  
+  qr_code       
+}
+model Booking {
+  id              Int         @id @default(autoincrement())
+  phone_number    String
+  user_name       String
+  special_request String?
+  total_price     Float
+  start_date_time DateTime
+  status          BookingStatus  @default(pending)
+  is_paid         Boolean        @default(false)
+  payment_method  PaymentMethod  
+  room_type_id    Int
+  check_out_time  DateTime? 
+  room_type       RoomTypes   @relation(fields: [room_type_id], references: [id])
+  rental_price_id Int
+  rental_price    RentalPrice @relation(fields: [rental_price_id], references: [id])
+}
+
+model Hotel {
+  id        Int    @id @default(autoincrement())
+  name      String
+  address   String
+  city      String
+  mainimage String
+  latitude  Float
+  longitude Float
+  roomTypes RoomTypes[] // One-to-many relationship with RoomTypes
+}
+
+model RoomTypes {
+  id          Int    @id @default(autoincrement())
+  hotel_id    Int
+  hotel       Hotel  @relation(fields: [hotel_id], references: [id])
+  description String
+  isAvailable   Boolean @default(true)
+  rentalPrices RentalPrice[]
+  roomAmenity    RoomAmenity[]
+  images       Image[]
+  bookings     Booking[]
+}
+model Amenity {
+  id           Int       @id @default(autoincrement()) 
+  description  String
+  image        String
+  rooms        RoomAmenity[]
+}
+model RoomAmenity {
+  room_id  Int
+  amenity_id Int
+  roomTypes RoomTypes   @relation(fields: [room_id], references: [id])
+  amenity Amenity @relation(fields: [amenity_id], references: [id])
+  @@id([room_id, amenity_id])
+}
+model Image {
+  id           Int       @id @default(autoincrement()) // Add an ID for Image
+  room_type_id Int
+  room_type    RoomTypes @relation(fields: [room_type_id], references: [id])
+  image_link   String
+}
